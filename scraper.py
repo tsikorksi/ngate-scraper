@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import urllib.request
 import urllib.error
 import os
+import textwrap
 
 base_url = "http://n-gate.com"
 
@@ -71,9 +72,10 @@ def page_parser(url):
 
 
 def print_post(week):
-    print(week[0])
     for day in week[1:]:
-        print(f"{day['Title']}\n{(day['url'])}\n{day['Date']}\n{day['Text']}\n(n for next, q for quit)>", end='')
+        cls(after=f'{week[0]}\n')
+        print(f"\n\t{day['Title']}\n\t{(day['url'])}\n\t{day['Date']}\n")
+        print('\n\t'.join(textwrap.wrap(f"\t{day['Text']}\n(n for next, q for quit)>")), end='')
         if get_next():
             print()
             continue
@@ -90,9 +92,16 @@ def get_next():
             return False
 
 
-def print_banner():
+def cls(after=''):
     os.system('cls' if os.name == 'nt' else 'clear')
-    banner = """                               
+    print(after, end='')
+
+
+def print_banner():
+    cls()
+    banner = """
+    n-gate.com. we can't both be right. 
+                                   
     MMMMMN0OOOOOOOOOOOOOOOOOOXMMMMMMMMMMMMMM
     MMMMMk;cdddddddddddddddddddkKWMMMMMMMMMM
     MMMMMx;OMMMMMMMMMMMMMMMMMNKOdxKWMMMMMMMM
