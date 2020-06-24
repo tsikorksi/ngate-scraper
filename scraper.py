@@ -9,6 +9,11 @@ base_url = "http://n-gate.com"
 
 
 def download_map():
+    """
+    Downloads sitemap form n-gate, checks for network errors
+
+    :return: the sitemap HTML
+    """
     try:
         sitemap = urllib.request.urlopen(f'{base_url}/sitemap')
     except urllib.error.URLError:
@@ -19,6 +24,13 @@ def download_map():
 
 
 def parse_links(html, string):
+    """
+    Finds all the links to pages in sitemap
+
+    :param html: the html of the sitemap
+    :param string: the searched for string, pointing to the type of post
+    :return: the url of each post
+    """
     output = []
     soup = BeautifulSoup(html, 'html.parser')
     for item in soup.find_all('li'):
@@ -29,6 +41,13 @@ def parse_links(html, string):
 
 
 def gets_urls(section, yearly=False):
+    """
+    Formats and cleans the urls
+
+    :param section: the links for a particular site section
+    :param yearly: whether or not dates are per year
+    :return: the post links
+    """
     posts = []
     for post in section:
         struct = post.split('/')
@@ -40,6 +59,12 @@ def gets_urls(section, yearly=False):
 
 
 def page_parser(url):
+    """
+    The text and data associated with a section of posts, placed into a dictionary
+
+    :param url: the post url
+    :return: the week of posts as a list, formatted
+    """
     page = urllib.request.urlopen(f'{base_url}{url}')
     page = BeautifulSoup(page, 'html.parser')
     posts = page.find_all('p')
@@ -72,6 +97,12 @@ def page_parser(url):
 
 
 def print_post(week):
+    """
+    pretty-prints each post with a prompt
+
+    :param week: a group of posts
+    :return: if quit command was sent, then false
+    """
     for day in week[1:]:
         cls(after=f'{week[0]}\n')
         print(f"\n\t{day['Title']}\n\t{(day['url'])}\n\t{day['Date']}\n")
@@ -84,6 +115,11 @@ def print_post(week):
 
 
 def get_next():
+    """
+    Simple CLI prompt
+
+    :return: true if next, false if quit
+    """
     while True:
         n = input('')
         if n == 'n':
@@ -93,11 +129,22 @@ def get_next():
 
 
 def cls(after=''):
+    """
+    Clears the screen, optionally adding a ending
+
+    :param after: the optional ending string
+    :return: Clears terminal
+    """
     os.system('cls' if os.name == 'nt' else 'clear')
     print(after, end='')
 
 
 def print_banner():
+    """
+    Prints a pretty banner
+
+    :return: A banner
+    """
     cls()
     banner = """
     n-gate.com. we can't both be right. 
@@ -124,6 +171,12 @@ def print_banner():
 
 
 def main():
+    """
+    Main terminal parser
+    TODO: argument mode, search
+
+    :return:
+    """
     options = ['Latest Post', 'FOSDEM: more boring shit', 'Webshit Weekly', 'Software', 'About', 'Exit']
 
     print_banner()
