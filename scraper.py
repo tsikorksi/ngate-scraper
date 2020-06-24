@@ -37,7 +37,7 @@ def parse_links(html, string):
         if string in item.string:
             output.append(item.find('a').get('href'))
 
-    return string
+    return output
 
 
 def gets_urls(section, yearly=False):
@@ -96,6 +96,18 @@ def page_parser(url):
     return weeks[1:]
 
 
+def conference_parser(url):
+    """
+    Parses a FOSDEM conference page into readable sections
+
+    :param url: the url of the conference post
+    :return: the text data
+    """
+    page = urllib.request.urlopen(f'{base_url}{url}')
+    page = BeautifulSoup(page, 'html.parser')
+    return page.text
+
+
 def print_post(week):
     """
     pretty-prints each post with a prompt
@@ -114,6 +126,15 @@ def print_post(week):
             return False
 
 
+def conference_print(year):
+    """
+    pretty prints each year by section
+    :param year: the text data for a conference year
+    :return: False if quit
+    """
+    return year
+
+
 def get_next():
     """
     Simple CLI prompt
@@ -121,7 +142,7 @@ def get_next():
     :return: true if next, false if quit
     """
     while True:
-        n = input('')
+        n = input('\n')
         if n == 'n':
             return True
         elif n == 'q':
@@ -170,6 +191,22 @@ def print_banner():
     print("Please donate to the source: https://www.patreon.com/ngate\n")
 
 
+def menu(options):
+    """
+    Menu generator
+
+    :param options: the possible options
+    :return: the chosen option
+    """
+    for index, item in enumerate(options):
+        print(f"[{index + 1}] - {item}")
+    try:
+        output = int(input(">"))
+    except ValueError:
+        output = 0
+    return output
+
+
 def main():
     """
     Main terminal parser
@@ -192,12 +229,7 @@ def main():
 
     while True:
 
-        for index, item in enumerate(options):
-            print(f"[{index +1 }] - {item}")
-        try:
-            section = int(input(">"))
-        except ValueError:
-            section = 0
+        section = menu(options)
         if section == 1:
             # Latest
             for week in page_parser(''):
@@ -208,16 +240,18 @@ def main():
             # FOSDEM
             fosdem = parse_links(html, 'FOSDEM')
             posts = gets_urls(fosdem, True)
-            for post in posts:
-                for week in page_parser(post):
-                    print_post(week)
+
+            choice = menu([post[0] for post in posts])
+            conference_print(conference_parser(posts[choice - 1][1]))
 
         elif section == 3:
             weekly = parse_links(html, 'webshit weekly')
+            posts = gets_urls(weekly)
             # Webshit
-            for post in weekly:
-                for week in page_parser(post):
-                    print_post(week)
+            for post in posts:
+                for week in page_parser(post[1]):
+                    if not print_post(week):
+                        break
         elif section == 4:
             # Software
             continue
