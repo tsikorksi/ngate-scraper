@@ -2,6 +2,7 @@
 from bs4 import BeautifulSoup
 import urllib.request
 import urllib.error
+import os
 
 base_url = "http://n-gate.com"
 
@@ -16,19 +17,17 @@ def download_map():
     return sitemap.read()
 
 
-def parse_links(html):
-    fosdem = []
-    weekly = []
+def parse_links(html, string):
+    output = []
     soup = BeautifulSoup(html, 'html.parser')
     for item in soup.find_all('li'):
-        if 'webshit weekly' in item.string:
-            weekly.append(item.find('a').get('href'))
-        elif 'FOSDEM' in item.string:
-            fosdem.append(item.find('a').get('href'))
-    return fosdem, weekly
+        if string in item.string:
+            output.append(item.find('a').get('href'))
+
+    return string
 
 
-def choose_date(section, yearly=False):
+def gets_urls(section, yearly=False):
     posts = []
     for post in section:
         struct = post.split('/')
@@ -41,14 +40,58 @@ def choose_date(section, yearly=False):
 
 def page_parser(url):
     page = urllib.request.urlopen(f'{base_url}{url}')
-    post = BeautifulSoup(page, 'html.parser')
-    posts = post.find_all('p')
-    print(posts)
+    page = BeautifulSoup(page, 'html.parser')
+    posts = page.find_all('p')
 
-    # print(f"Post for {date[0]}/{date[1]}/{date[2]}")
+    weeks = []
+    week = []
+    day = {
+        "url": "",
+        "Title": "",
+        "Date": "",
+        "Text": ""
+    }
+    for post in posts:
+        text = post.get_text().split('\n')
+        if text[0] == 'Navigation:':
+            continue
+        elif text[0].startswith('An annotated digest'):
+            weeks.append(week)
+            week = [text[0]]
+        elif text[0] == '':
+            day['url'] = post.find_next('a').get('href')
+            day["Title"] = text[1]
+            day["Date"] = text[2]
+            day["Text"] = text[4]
+            week.append(day)
+            day = day.fromkeys(day, "")
+
+    weeks.append(week)
+    return weeks[1:]
 
 
-def main():
+def print_post(week):
+    print(week[0])
+    for day in week[1:]:
+        print(f"{day['Title']}\n{(day['url'])}\n{day['Date']}\n{day['Text']}\n(n for next, q for quit)>", end='')
+        if get_next():
+            print()
+            continue
+        else:
+            return False
+
+
+def get_next():
+    while True:
+        n = input('')
+        if n == 'n':
+            return True
+        elif n == 'q':
+            return False
+
+
+def print_banner():
+    os.system('cls' if os.name == 'nt' else 'clear')
     banner = """                               
     MMMMMN0OOOOOOOOOOOOOOOOOOXMMMMMMMMMMMMMM
     MMMMMk;cdddddddddddddddddddkKWMMMMMMMMMM
@@ -67,36 +110,62 @@ def main():
     MMMMMWK000000000000000000XWMMMMMMMMMMMMM      
     """
     print(banner)
-    print("Reader created by Osirian\n")
-    print("Please donate to the source: https://www.patreon.com/ngate")
+    print("N-Gate reader created by Osirian\n")
+    print("Please donate to the source: https://www.patreon.com/ngate\n")
+
+
+def main():
+    options = ['Latest Post', 'FOSDEM: more boring shit', 'Webshit Weekly', 'Software', 'About', 'Exit']
+
+    print_banner()
+
+    # Attempt Connection
+    print("Querying Website...", end='')
     html = download_map()
     if html is None:
-        print("\n Unable to connect to n-gate.com, please check connection...")
+        print("\n Unable to connect to n-gate.com, please check connection!")
         exit(1)
+    else:
+        print("Done!\n")
 
-    fosdem, weekly = parse_links(html)
+    while True:
 
-    options = ['Latest Post', 'FOSDEM: more boring shit', 'Webshit Weekly', 'Software', 'About']
-    chosen = False
-
-    while not chosen:
         for index, item in enumerate(options):
             print(f"[{index +1 }] - {item}")
-        section = int(input(">"))
+        try:
+            section = int(input(">"))
+        except ValueError:
+            section = 0
         if section == 1:
-            page_parser('')
-            chosen = True
-        elif section == 2:
-            posts = choose_date(fosdem, True)
-            chosen = True
-        elif section == 3:
-            posts = choose_date(weekly)
-            chosen = True
-        elif section == 4:
-            chosen = True
-        elif section == 5:
+            # Latest
+            for week in page_parser(''):
+                if not print_post(week):
+                    break
 
-            chosen = True
+        elif section == 2:
+            # FOSDEM
+            fosdem = parse_links(html, 'FOSDEM')
+            posts = gets_urls(fosdem, True)
+            for post in posts:
+                for week in page_parser(post):
+                    print_post(week)
+
+        elif section == 3:
+            weekly = parse_links(html, 'webshit weekly')
+            # Webshit
+            for post in weekly:
+                for week in page_parser(post):
+                    print_post(week)
+        elif section == 4:
+            # Software
+            continue
+        elif section == 5:
+            # About
+            continue
+        elif section == 6:
+            exit(0)
+
+        print_banner()
 
 
 main()
