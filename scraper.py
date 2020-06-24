@@ -151,7 +151,7 @@ def get_next():
 
 def cls(after=''):
     """
-    Clears the screen, optionally adding a ending
+    Clears the screen, optionally adding an ending
 
     :param after: the optional ending string
     :return: Clears terminal
@@ -198,13 +198,17 @@ def menu(options):
     :param options: the possible options
     :return: the chosen option
     """
-    for index, item in enumerate(options):
-        print(f"[{index + 1}] - {item}")
-    try:
-        output = int(input(">"))
-    except ValueError:
-        output = 0
-    return output
+    while True:
+        for index, item in enumerate(options):
+            print(f"[{index + 1}] - {item}")
+        try:
+            output = int(input(">"))
+        except ValueError:
+            continue
+        if output < 0 or output > len(options):
+            continue
+        else:
+            return output
 
 
 def main():
@@ -245,10 +249,28 @@ def main():
             conference_print(conference_parser(posts[choice - 1][1]))
 
         elif section == 3:
+            # Webshit
             weekly = parse_links(html, 'webshit weekly')
             posts = gets_urls(weekly)
-            # Webshit
-            for post in posts:
+            dates = []
+            temp = '/hackernews/'
+
+            for i in range(0, 3):
+                times = []
+                for post in posts:
+                    if post[0][i] not in times and post[1].startswith(temp) is True:
+                        times.append(post[0][i])
+                times.sort()
+                time = times[menu(times) - 1]
+                dates.append(time)
+                temp += time + '/'
+
+            i = 0
+            for i in range(0, len(posts)):
+                if posts[i][0] == dates:
+                    break
+
+            for post in posts[i:]:
                 for week in page_parser(post[1]):
                     if not print_post(week):
                         break
