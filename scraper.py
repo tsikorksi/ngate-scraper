@@ -65,7 +65,11 @@ def page_parser(url):
     :param url: the post url
     :return: the week of posts as a list, formatted
     """
-    page = urllib.request.urlopen(f'{base_url}{url}')
+    try:
+        page = urllib.request.urlopen(f'{base_url}{url}')
+    except urllib.error.URLError:
+        print("\n Unable to connect to n-gate.com, please check connection!")
+        exit(1)
     page = BeautifulSoup(page, 'html.parser')
     posts = page.find_all('p')
 
@@ -133,6 +137,36 @@ def conference_print(year):
     :return: False if quit
     """
     return year
+
+
+def webshit_reader(posts):
+    """
+    Parse and output webshit weekly
+    :param posts: parsed list of posts
+    :return: return when quit signal sent
+    """
+    dates = []
+    temp = '/hackernews/'
+
+    for i in range(0, 3):
+        times = []
+        for post in posts:
+            if post[0][i] not in times and post[1].startswith(temp) is True:
+                times.append(post[0][i])
+        times.sort()
+        time = times[menu(times) - 1]
+        dates.append(time)
+        temp += time + '/'
+
+    i = 0
+    for i in range(0, len(posts)):
+        if posts[i][0] == dates:
+            break
+
+    for post in posts[i:]:
+        for week in page_parser(post[1]):
+            if not print_post(week):
+                return
 
 
 def get_next():
@@ -214,7 +248,7 @@ def menu(options):
 def main():
     """
     Main terminal parser
-    TODO: argument mode, search
+    TODO: argument mode, search, FOSDEM
 
     :return:
     """
@@ -252,28 +286,8 @@ def main():
             # Webshit
             weekly = parse_links(html, 'webshit weekly')
             posts = gets_urls(weekly)
-            dates = []
-            temp = '/hackernews/'
+            webshit_reader(posts)
 
-            for i in range(0, 3):
-                times = []
-                for post in posts:
-                    if post[0][i] not in times and post[1].startswith(temp) is True:
-                        times.append(post[0][i])
-                times.sort()
-                time = times[menu(times) - 1]
-                dates.append(time)
-                temp += time + '/'
-
-            i = 0
-            for i in range(0, len(posts)):
-                if posts[i][0] == dates:
-                    break
-
-            for post in posts[i:]:
-                for week in page_parser(post[1]):
-                    if not print_post(week):
-                        break
         elif section == 4:
             # Software
             continue
