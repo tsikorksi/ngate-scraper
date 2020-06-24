@@ -1,65 +1,102 @@
 # maybe remove?
 from bs4 import BeautifulSoup
 import urllib.request
+import urllib.error
 
 base_url = "http://n-gate.com"
 
+
 def download_map():
-    sitemap = urllib.request.urlopen(f'{base_url}/sitemap')
-    if (sitemap.getcode() != 200):
+    try:
+        sitemap = urllib.request.urlopen(f'{base_url}/sitemap')
+    except urllib.error.URLError:
+        return None
+    if sitemap.getcode() != 200:
         return None
     return sitemap.read()
+
 
 def parse_links(html):
     fosdem = []
     weekly = []
     soup = BeautifulSoup(html, 'html.parser')
     for item in soup.find_all('li'):
-        if ('webshit weekly' in item.string):
+        if 'webshit weekly' in item.string:
             weekly.append(item.find('a').get('href'))
-        elif ('FOSDEM' in item.string):
+        elif 'FOSDEM' in item.string:
             fosdem.append(item.find('a').get('href'))
     return fosdem, weekly
+
 
 def choose_date(section, yearly=False):
     posts = []
     for post in section:
         struct = post.split('/')
-        if (yearly):
+        if yearly:
             posts.append((struct[2], post))
         else:
             posts.append((struct[2:-2], post))
     return posts
 
 
-def main(section=2):
+def page_parser(url):
+    page = urllib.request.urlopen(f'{base_url}{url}')
+    post = BeautifulSoup(page, 'html.parser')
+    posts = post.find_all('p')
+    print(posts)
+
+    # print(f"Post for {date[0]}/{date[1]}/{date[2]}")
+
+
+def main():
     banner = """                               
-                            _                               
-    _ __         __ _  __ _| |_ ___   ___ ___  _ __ ___     
-    | '_ \ _____ / _` |/ _` | __/ _ \ / __/ _ \| '_ ` _ \    
-    | | | |_____| (_| | (_| | ||  __/| (_| (_) | | | | | |_  
-    |_| |_|      \__, |\__,_|\__\___(_)___\___/|_| |_| |_(_) 
-                |___/                                       
-                                    _ _     _           _   _       _                 _       _     _     
-    __      _____    ___ __ _ _ __ ( ) |_  | |__   ___ | |_| |__   | |__   ___   _ __(_) __ _| |__ | |_   
-    \ \ /\ / / _ \  / __/ _` | '_ \|/| __| | '_ \ / _ \| __| '_ \  | '_ \ / _ \ | '__| |/ _` | '_ \| __|  
-    \ V  V /  __/ | (_| (_| | | | | | |_  | |_) | (_) | |_| | | | | |_) |  __/ | |  | | (_| | | | | |_ _ 
-    \_/\_/ \___|  \___\__,_|_| |_|  \__| |_.__/ \___/ \__|_| |_| |_.__/ \___| |_|  |_|\__, |_| |_|\__(_)
-                                                                                        |___/             
+    MMMMMN0OOOOOOOOOOOOOOOOOOXMMMMMMMMMMMMMM
+    MMMMMk;cdddddddddddddddddddkKWMMMMMMMMMM
+    MMMMMx;OMMMMMMMMMMMMMMMMMNKOdxKWMMMMMMMM
+    ddddd:,OMMMMMMMMMMMMMMMMMMMMNOdkXMMMMMMM
+    ;;,;;.'OMMMMMMMMMMMMMMMMMMMMMMNxlOMMMMMM
+    MWMWWx;OMMMMMMMMMMMMMMMMMMMMMMMNklOMMMMM
+    MMMMMx;OMMMMMMMMMMMMMMMMMMMMMMMMK;,dk000
+    MMMMMx;OMMMMMMMMMMMMMMMMMMMMMMMMK;:kc'''
+    MMMMMx;OMMMMMMMMMMMMMMMMMMMMMMMMK;;dk00K
+    MMMMMx;OMMMMMMMMMMMMMMMMMMMMMMMNklOMMMMM
+    kkkkkc,OMMMMMMMMMMMMMMMMMMMMMMNxlOMMMMMM
+    '''',.'OMMMMMMMMMMMMMMMMMMMMXkdkXMMMMMMM
+    NNNNNx;OMMMMMMMMMMMMMMMMMN0OdkXMMMMMMMMM
+    MMMMMO;cdddddddddddddddddddkXWMMMMMMMMMM
+    MMMMMWK000000000000000000XWMMMMMMMMMMMMM      
     """
     print(banner)
-    print("Parser created by Osirian\n")
+    print("Reader created by Osirian\n")
     print("Please donate to the source: https://www.patreon.com/ngate")
     html = download_map()
-    if (html == None):
-        print("Unable to connect to n-gate.com, please check connection...")
+    if html is None:
+        print("\n Unable to connect to n-gate.com, please check connection...")
         exit(1)
-    else:
-        fosdem, weekly = parse_links(html)
-        if (section == 1):
+
+    fosdem, weekly = parse_links(html)
+
+    options = ['Latest Post', 'FOSDEM: more boring shit', 'Webshit Weekly', 'Software', 'About']
+    chosen = False
+
+    while not chosen:
+        for index, item in enumerate(options):
+            print(f"[{index +1 }] - {item}")
+        section = int(input(">"))
+        if section == 1:
+            page_parser('')
+            chosen = True
+        elif section == 2:
             posts = choose_date(fosdem, True)
-        elif (section == 2):
+            chosen = True
+        elif section == 3:
             posts = choose_date(weekly)
-        
+            chosen = True
+        elif section == 4:
+            chosen = True
+        elif section == 5:
+
+            chosen = True
+
 
 main()
