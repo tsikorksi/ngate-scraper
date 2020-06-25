@@ -8,14 +8,14 @@ import textwrap
 base_url = "http://n-gate.com"
 
 
-def download_map():
+def download(url):
     """
-    Downloads sitemap form n-gate, checks for network errors
+    Downloads from n-gate, checks for network errors
 
     :return: the sitemap HTML
     """
     try:
-        sitemap = urllib.request.urlopen(f'{base_url}/sitemap')
+        sitemap = urllib.request.urlopen(f'{base_url}{url}')
     except urllib.error.URLError:
         return None
     if sitemap.getcode() != 200:
@@ -65,11 +65,9 @@ def page_parser(url):
     :param url: the post url
     :return: the week of posts as a list, formatted
     """
-    try:
-        page = urllib.request.urlopen(f'{base_url}{url}')
-    except urllib.error.URLError:
-        print("\n Unable to connect to n-gate.com, please check connection!")
-        exit(1)
+    page = download(url)
+    if page is None:
+        return
     page = BeautifulSoup(page, 'html.parser')
     posts = page.find_all('p')
 
@@ -109,7 +107,7 @@ def conference_parser(url):
     """
     page = urllib.request.urlopen(f'{base_url}{url}')
     page = BeautifulSoup(page, 'html.parser')
-    return page.text
+    return page.find('div', {"id": "main-copy"})
 
 
 def print_post(week):
@@ -133,10 +131,12 @@ def print_post(week):
 def conference_print(year):
     """
     pretty prints each year by section
+
     :param year: the text data for a conference year
     :return: False if quit
     """
-    return year
+    headers = year.find_all('h')
+    print(year)
 
 
 def webshit_reader(posts):
@@ -151,18 +151,24 @@ def webshit_reader(posts):
     for i in range(0, 3):
         times = []
         for post in posts:
+            # Check that date section is not already found and valid for the rest of the date
             if post[0][i] not in times and post[1].startswith(temp) is True:
                 times.append(post[0][i])
         times.sort()
-        time = times[menu(times) - 1]
+        choice = menu(times)
+        if not choice:
+            return
+        time = times[choice - 1]
         dates.append(time)
         temp += time + '/'
 
     i = 0
+    # get index of searched for post
     for i in range(0, len(posts)):
         if posts[i][0] == dates:
             break
 
+    # parse from that point
     for post in posts[i:]:
         for week in page_parser(post[1]):
             if not print_post(week):
@@ -230,9 +236,10 @@ def menu(options):
     Menu generator
 
     :param options: the possible options
-    :return: the chosen option
+    :return: the chosen option, or False if exit
     """
     while True:
+        print(f"[0] - Exit")
         for index, item in enumerate(options):
             print(f"[{index + 1}] - {item}")
         try:
@@ -241,6 +248,8 @@ def menu(options):
             continue
         if output < 0 or output > len(options):
             continue
+        elif output == 0:
+            return False
         else:
             return output
 
@@ -252,13 +261,13 @@ def main():
 
     :return:
     """
-    options = ['Latest Post', 'FOSDEM: more boring shit', 'Webshit Weekly', 'Software', 'About', 'Exit']
+    options = ['Latest Post', 'FOSDEM: more boring shit', 'Webshit Weekly', 'About']
 
     print_banner()
 
     # Attempt Connection
     print("Querying Website...", end='')
-    html = download_map()
+    html = download('/sitemap')
     if html is None:
         print("\n Unable to connect to n-gate.com, please check connection!")
         exit(1)
@@ -289,12 +298,10 @@ def main():
             webshit_reader(posts)
 
         elif section == 4:
-            # Software
-            continue
-        elif section == 5:
             # About
             continue
-        elif section == 6:
+
+        elif not section:
             exit(0)
 
         print_banner()
