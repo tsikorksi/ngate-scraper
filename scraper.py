@@ -3,7 +3,6 @@ from bs4 import BeautifulSoup
 import urllib.request
 import urllib.error
 import os
-import re
 import textwrap
 
 base_url = "http://n-gate.com"
@@ -104,11 +103,41 @@ def conference_parser(url):
     Parses a FOSDEM conference page into readable sections
 
     :param url: the url of the conference post
-    :return: the text data
+    :return: the text data, list of section dicts
     """
-    page = urllib.request.urlopen(f'{base_url}{url}')
+    section = {
+        "Title": "",
+        "Text": []
+    }
+    temp = []
+
+    page = download(url)
     page = BeautifulSoup(page, 'html.parser')
-    return page.find('div', {"id": "main-copy"})
+    page = page.find('div', {"id": "main-copy"})
+    page = page.find_all(['p', 'h3'])
+
+    text = page[0].text.split('\n')
+    sections = [text[0]]
+    text[0] = ''
+    for i in range(0, len(text)):
+        try:
+            if text[i+1] == '' and text[i-1] == '':
+                section["Text"] = temp[2:]
+                sections.append(section)
+                section = section.fromkeys(section, "")
+                section["Title"] = text[i]
+                temp = []
+            else:
+                temp.append(text[i])
+        except IndexError:
+            continue
+
+    section["Text"] = temp[2:]
+    sections.append(section)
+
+    sections.pop(1)
+
+    return sections
 
 
 def print_post(week):
@@ -136,9 +165,6 @@ def conference_print(year):
     :param year: the text data for a conference year
     :return: False if quit
     """
-    top = year.find('h1')
-    regex = re.compile("(h3)|(p)")
-    headers = year.find_all(regex)
     print(year)
 
 
@@ -260,7 +286,7 @@ def menu(options):
 def main():
     """
     Main terminal parser
-    TODO: argument mode, search, FOSDEM
+    TODO: argument mode, search, FOSDEM printer
 
     :return:
     """
