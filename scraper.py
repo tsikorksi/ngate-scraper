@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import urllib.request
 import urllib.error
 import os
+import re
 import textwrap
 
 base_url = "http://n-gate.com"
@@ -135,7 +136,9 @@ def conference_print(year):
     :param year: the text data for a conference year
     :return: False if quit
     """
-    headers = year.find_all('h')
+    top = year.find('h1')
+    regex = re.compile("(h3)|(p)")
+    headers = year.find_all(regex)
     print(year)
 
 
