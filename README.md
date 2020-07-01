@@ -3,7 +3,6 @@ Over the years of reading n-gate.com, I have found the website difficult to bing
  ## Features
  - Read the latest page of posts
  - Go back through the archive, find a specific post 
- - Search
 
  ## Requirements
  - Python 3
