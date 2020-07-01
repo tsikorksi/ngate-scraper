@@ -1,9 +1,9 @@
-# maybe remove?
 from bs4 import BeautifulSoup
 import urllib.request
 import urllib.error
 import os
 import textwrap
+import random
 
 base_url = "http://n-gate.com"
 
@@ -121,7 +121,8 @@ def conference_parser(url):
     text[0] = ''
     for i in range(0, len(text)):
         try:
-            if text[i+1] == '' and text[i-1] == '':
+            # Check for section title
+            if text[i + 1] == '' and text[i - 1] == '':
                 section["Text"] = temp[1:]
                 sections.append(section)
                 section = section.fromkeys(section, "")
@@ -151,6 +152,7 @@ def print_post(week):
         cls(after=f'{week[0]}\n')
         print(f"\n\t{day['Title']}\n\t{(day['url'])}\n\t{day['Date']}\n")
         print('\n\t'.join(textwrap.wrap(f"\t{day['Text']}\n(n for next, q for quit)>")), end='')
+
         if get_next():
             print()
             continue
@@ -166,12 +168,15 @@ def conference_print(year):
     :return: False if quit
     """
     for section in year[1:]:
+
         cls(after=f'{year[0]}\n')
         print(f'\n{section["Title"]}\n')
         text = section["Text"]
+
         for i in range(0, len(text) - 1, 2):
-            print(f'\t{text[i]}\n\n\t{text[i+1]}\n')
-        print('\n(n for next, q for quit)>', end='\r')
+            print(f'\t{text[i]}\n\n\t{text[i + 1]}\n')
+        print('\n(n for next, q for quit)>')
+
         if get_next():
             continue
         else:
@@ -181,6 +186,7 @@ def conference_print(year):
 def webshit_reader(posts):
     """
     Parse and output webshit weekly
+
     :param posts: parsed list of posts
     :return: return when quit signal sent
     """
@@ -246,7 +252,7 @@ def print_banner():
     :return: A banner
     """
     cls()
-    banner = """
+    banners = ["""
     n-gate.com. we can't both be right. 
                                    
     MMMMMN0OOOOOOOOOOOOOOOOOOXMMMMMMMMMMMMMM
@@ -264,8 +270,17 @@ def print_banner():
     NNNNNx;OMMMMMMMMMMMMMMMMMN0OdkXMMMMMMMMM
     MMMMMO;cdddddddddddddddddddkXWMMMMMMMMMM
     MMMMMWK000000000000000000XWMMMMMMMMMMMMM      
-    """
-    print(banner)
+    """,
+               r"""     n-gate.com. we can't both be right.
+                                   __                                       
+      ____             _________ _/  |_  ____       ____  ____   _____      
+     /    \   ______  / ___\__  \\   __\/ __ \    _/ ___\/  _ \ /     \     
+    |   |  \ /_____/ / /_/  > __ \|  | \  ___/    \  \__(  <_> )  Y Y  \    
+    |___|  /         \___  (____  /__|  \___  > /\ \___  >____/|__|_|  / /\ 
+         \/         /_____/     \/          \/  \/     \/            \/  \/ 
+
+    """]
+    print(random.choice(banners))
     print("N-Gate reader created by Osirian\n")
     print("Please donate to the source: https://www.patreon.com/ngate\n")
 
@@ -296,7 +311,6 @@ def menu(options):
 def main():
     """
     Main terminal parser
-    TODO: argument mode, search
 
     :return:
     """
@@ -338,7 +352,25 @@ def main():
 
         elif section == 4:
             # About
-            continue
+            print('\tAbout this webshit\n')
+
+            print("""
+            Hacker News is an echo chamber focusing on computer posturing and self-aggrandizement. 
+            It is run by Paul Graham's investment fund and sociopath incubator, Y Combinator.
+            In general, content that can be submitted is defined as"anything that gratifies one's ineffectual curiosity"
+            """)
+            print("""
+            Free and Open Source Software Developers' European Meeting (FOSDEM) is a non-commercial,
+            volunteer-organized European mistake centered on free and open-source attention whoring.
+            It is aimed at TEDx wannabes and anyone interested in the free and open-source noisemaking movement. 
+            It aims to enable social media engagement specialists to meet and
+            to promote the awareness and use of themselves.
+            """)
+
+            print("\tOpinions are those of your employer.")
+            print("\tThis parser created by Osirian. Made </3")
+            print('\n(q for quit)>', end='\r')
+            get_next()
 
         elif not section:
             exit(0)
