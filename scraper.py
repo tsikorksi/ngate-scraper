@@ -122,7 +122,7 @@ def conference_parser(url):
     for i in range(0, len(text)):
         try:
             if text[i+1] == '' and text[i-1] == '':
-                section["Text"] = temp[2:]
+                section["Text"] = temp[1:]
                 sections.append(section)
                 section = section.fromkeys(section, "")
                 section["Title"] = text[i]
@@ -165,7 +165,17 @@ def conference_print(year):
     :param year: the text data for a conference year
     :return: False if quit
     """
-    print(year)
+    for section in year[1:]:
+        cls(after=f'{year[0]}\n')
+        print(f'\n{section["Title"]}\n')
+        text = section["Text"]
+        for i in range(0, len(text) - 1, 2):
+            print(f'\t{text[i]}\n\n\t{text[i+1]}\n')
+        print('\n(n for next, q for quit)>', end='\r')
+        if get_next():
+            continue
+        else:
+            return False
 
 
 def webshit_reader(posts):
@@ -286,7 +296,7 @@ def menu(options):
 def main():
     """
     Main terminal parser
-    TODO: argument mode, search, FOSDEM printer
+    TODO: argument mode, search
 
     :return:
     """
