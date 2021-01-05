@@ -90,7 +90,8 @@ def page_parser(url):
             day['url'] = post.find_next('a').get('href')
             day["Title"] = text[1]
             day["Date"] = text[2]
-            day["Text"] = text[4]
+            if len(text) > 3:
+                day["Text"] = text[4]
             week.append(day)
             day = day.fromkeys(day, "")
 
